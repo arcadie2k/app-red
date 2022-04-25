@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+    Datepicker component
+*/
+.svg-icon {
+    width: 1em;
+    height: 1em;
+
+    path,
+    polygon,
+    rect {
+        fill: #4691f6;
+    }
+
+    circle {
+        stroke: #4691f6;
+        stroke-width: 1;
+    }
+}
+
+.datePicker {
+    font-size: 14px;
+
+    &Label,
+    &Selector {
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        padding: 0.75rem;
+        background-color: white;
+        user-select: none;
+    }
+
+    &Selector {
+        padding: 0;
+        margin-top: 0.25rem;
+        overflow: hidden;
+        display: none;
+        user-select: none;
+        background: white;
+
+        &.active {
+            display: block;
+        }
+
+        &Table {
+            width: 100%;
+            border-collapse: collapse;
+
+            tr {
+                border-bottom: 1px solid #eee;
+                &:last-child {
+                    border-bottom: 0;
+                }
+            }
+
+            td {
+                padding: 0.5rem;
+                border-right: 1px solid #eee;
+                &:last-child {
+                    border-right: 0;
+                }
+            }
+
+            &Header {
+                &CurrentMonth {
+                    text-align: center;
+                }
+
+                &PreviousMonth,
+                &NextMonth {
+                    display: block;
+                    margin: auto;
+                    path {
+                        fill: black;
+                    }
+                    &:hover path {
+                        fill: #4691f6;
+                    }
+                    cursor: pointer;
+                }
+            }
+
+            &Days {
+                &:hover {
+                    background: lighten(#e3effe, 4%);
+                }
+
+                &,
+                &NotInMonth {
+                    cursor: pointer;
+                }
+
+                &,
+                &Header,
+                &NotInMonth,
+                &Selected {
+                    text-align: center;
+                }
+
+                &Header {
+                    font-weight: bold;
+                }
+
+                &NotInMonth {
+                    color: #ddd;
+
+                    &:hover {
+                        background: #fdffdd;
+                    }
+                }
+
+                &Selected {
+                    background: #e3effe;
+                    border-left: 0;
+                    cursor: default;
+                }
+            }
+        }
+    }
+
+    &Caret {
+        transform: rotate(90deg);
+        margin-top: 0.18em;
+        float: right;
+
+        path {
+            fill: #444;
+        }
+    }
+
+    &Label:hover {
+        border-color: #4691f6;
+
+        .datePicker {
+            &Caret path {
+                fill: #4691f6;
+            }
+        }
+    }
+}
