@@ -3,7 +3,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import Button from "./Button";
 import Input from "./Input";
-import { combineClients, getClients } from "../utils";
+import { combineClients, formatDate, getClients } from "../utils";
 import ExcelClients from "../contexts/ExcelClients";
 
 const SearchClient = ({ clients, setClients }) => {
@@ -199,6 +199,7 @@ const SearchClient = ({ clients, setClients }) => {
         doc.text("Furnizor", 20, getHeight(32));
         doc.text("Manager vanzari", 20, getHeight(34));
         doc.text("Caldare Oleg ______________", 20, getHeight(36));
+        doc.text(`Data: ${formatDate(new Date())}`, 20, getHeight(45));
 
         doc.text("Consumator", 120, getHeight(32));
         doc.text(selectedClientValues.Consumator, 120, getHeight(34));
