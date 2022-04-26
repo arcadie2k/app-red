@@ -27,10 +27,10 @@ const App = () => {
                 ) : (
                     <section className="px-2 pt-2">
                         {/* Navbar */}
-                        <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-gray-200">
-                            <li class="mr-1 cursor-pointer" onClick={() => setActiveTab(0)}>
+                        <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-gray-200">
+                            <li className="mr-1 cursor-pointer" onClick={() => setActiveTab(0)}>
                                 <p
-                                    class={`inline-block p-4  rounded-t-lg ${
+                                    className={`inline-block p-4  rounded-t-lg ${
                                         activeTab === 0
                                             ? "text-blue-600 bg-gray-100"
                                             : "hover:text-gray-600 hover:bg-gray-50"
@@ -39,9 +39,9 @@ const App = () => {
                                     Cauta client
                                 </p>
                             </li>
-                            <li class="cursor-pointer" onClick={() => setActiveTab(1)}>
+                            <li className="cursor-pointer" onClick={() => setActiveTab(1)}>
                                 <p
-                                    class={`inline-block p-4 rounded-t-lg ${
+                                    className={`inline-block p-4 rounded-t-lg ${
                                         activeTab === 1
                                             ? "text-blue-600 bg-gray-100"
                                             : "hover:text-gray-600 hover:bg-gray-50"

@@ -51,7 +51,7 @@ const ViewClients = ({ clients, setClients }) => {
 
             if (clientUpdatedAt < startDate || clientUpdatedAt > endDate) return false;
 
-            if (filter && client.sentAt !== null) return false;
+            if (filter && (client.sentAt !== null || !client.Email.length)) return false;
 
             return true;
         });

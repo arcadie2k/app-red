@@ -27,8 +27,11 @@ export const combineClients = (excelClients, DBClients) => {
     /**
      * Overwrite Excel clients with those from DB
      */
-    excelClients.forEach((excelClient, excelClientIndex) => {
+    const combinedClients = [...excelClients];
+
+    combinedClients.forEach((excelClient, excelClientIndex) => {
         let newExcelClient = { ...excelClient };
+
         newExcelClient.sentAt = null;
         newExcelClient.fromDB = false;
 
@@ -57,6 +60,9 @@ export const combineClients = (excelClients, DBClients) => {
             newExcelClient.Fix2 = "";
             newExcelClient.Mobil2 = "";
 
+            newExcelClient.Telefon_1 = "Telefon_1" in newExcelClient ? String(newExcelClient.Telefon_1) : "";
+            newExcelClient.Telefon_2 = "Telefon_2" in newExcelClient ? String(newExcelClient.Telefon_2) : "";
+
             if (newExcelClient.Telefon_1?.length) {
                 const spl = newExcelClient.Telefon_1.split("m:");
 
@@ -71,8 +77,8 @@ export const combineClients = (excelClients, DBClients) => {
                 if (spl.length > 1) newExcelClient.Mobil2 = spl[1].trim();
             }
         }
-        excelClients[excelClientIndex] = newExcelClient;
+        combinedClients[excelClientIndex] = newExcelClient;
     });
 
-    return excelClients;
+    return combinedClients;
 };

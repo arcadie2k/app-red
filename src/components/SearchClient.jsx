@@ -123,8 +123,8 @@ const SearchClient = ({ clients, setClients }) => {
         const content = [
             {
                 fontSize: 22,
-                text: "Anexa la contractul nr. 123123",
-                h: 55,
+                text: `Anexa la contractul nr. ${selectedClientValues.Cont}`,
+                h: 50,
             },
             { text: "" },
             { text: "" },
@@ -207,7 +207,7 @@ const SearchClient = ({ clients, setClients }) => {
 
         doc.text("________________________________________________________________________", 20, getHeight(6));
 
-        doc.save(`${selectedClientValues.Consumator}.pdf`);
+        doc.output("dataurlnewwindow", `${selectedClientValues.Consumator}.pdf`);
     }, [selectedClientValues]);
 
     return (
