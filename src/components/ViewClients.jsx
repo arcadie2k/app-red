@@ -1,18 +1,22 @@
 import axios from "axios";
 import React, { useState, useContext, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
+import ExcelClients from "../contexts/ExcelClients";
+import { AlertsContext } from "../contexts/Alerts";
 import Button from "./Button";
 import Datepicker from "./Datepicker";
+import Checkbox from "./Checkbox";
 import { combineClients, formatDate, getClients } from "../utils";
-import ExcelClients from "../contexts/ExcelClients";
 
-const ViewClients = ({ clients, setClients }) => {
-    const thClass = "font-medium text-gray-900 px-2 py-4 border-r";
-    const tdClass = "text-sm text-gray-900 px-2 py-2 border-r";
+const ViewClients = () => {
+    const thClass = "text-xs text-gray-900 px-2 py-4 border-r font-bold uppercase";
+    const tdClass = "text-sm text-gray-900 p-2 border-r";
 
     const { excelClients } = useContext(ExcelClients);
+    const { makeAlert } = useContext(AlertsContext);
     const [DBClients, setDBClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]);
+    const [loading, setLoading] = useState(null);
 
     const [startDate, setStartDate] = useState(() => {
         const date = new Date();
@@ -64,12 +68,12 @@ const ViewClients = ({ clients, setClients }) => {
         const worksheet = XLSX.utils.json_to_sheet(
             clients.map((client) => {
                 const newClient = { ...client, "trimis la": client.sentAt !== null ? formatDate(client.sentAt) : "" };
-                delete newClient.Telefon_1;
-                delete newClient.Telefon_2;
+
                 delete newClient.fromDB;
                 delete newClient.createdAt;
                 delete newClient.updatedAt;
                 delete newClient.sentAt;
+
                 return newClient;
             })
         );
@@ -81,8 +85,9 @@ const ViewClients = ({ clients, setClients }) => {
     const sendAndExport = useCallback(async () => {
         if (!filteredClients.length) return;
         const clientsToExport = [];
-
         const newClients = [...DBClients];
+        setLoading("sendAndExport");
+
         for (const client of filteredClients) {
             try {
                 const res = await axios.put("/sendClient", {
@@ -102,6 +107,8 @@ const ViewClients = ({ clients, setClients }) => {
 
         exportExcel(clientsToExport);
         setDBClients(newClients);
+        setLoading(null);
+        makeAlert(`${clientsToExport.length} clienți au fost trimiși!`);
     }, [filteredClients, DBClients, exportExcel]);
 
     return (
@@ -112,31 +119,19 @@ const ViewClients = ({ clients, setClients }) => {
                     <Datepicker value={startDate} setValue={setStartDate} />
                 </div>
                 <div className="w-full max-w-md">
-                    <label class="block mb-2 pl-2 text-sm font-medium text-gray-900">Pana la</label>
+                    <label class="block mb-2 pl-2 text-sm font-medium text-gray-900">Pâna la</label>
                     <Datepicker value={endDate} setValue={setEndDate} />
                 </div>
             </div>
-            <div>
-                <div class="flex items-start mb-4">
-                    <div class="flex items-center h-5 cursor-pointer">
-                        <input
-                            id="filter"
-                            type="checkbox"
-                            className="w-4 h-4 bg-gray-50 rounded border border-gray-300 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800"
-                            checked={filter}
-                            onClick={() => setFilter(!filter)}
-                        />
-                    </div>
-                    <div class="ml-3 text-sm">
-                        <label htmlFor="filter" class="font-medium text-gray-900 dark:text-gray-300">
-                            Arata doar ne-trimisi
-                        </label>
-                    </div>
-                </div>
+
+            {/* Filter unsent */}
+            <div className="mb-4">
+                <Checkbox checked={filter} setChecked={setFilter} label="Arată doar ne-trimiși" />
             </div>
 
             <table className="min-w-full border text-center mb-8 bg-white">
                 <thead className="border-b border-">
+                    <th className={thClass}>Nr. Crt.</th>
                     <th className={thClass}>Cont</th>
                     <th className={thClass}>Consumator</th>
                     <th className={thClass}>Adresa</th>
@@ -149,8 +144,9 @@ const ViewClients = ({ clients, setClients }) => {
                     <th className={thClass}>D. transmitere</th>
                 </thead>
                 <tbody>
-                    {filteredClients.map((client) => (
+                    {filteredClients.map((client, clientIndex) => (
                         <tr key={client.Cont} className="border-b">
+                            <td className={tdClass}>{clientIndex + 1}</td>
                             <td className={tdClass}>{client.Cont}</td>
                             <td className={tdClass}>{client.Consumator}</td>
                             <td className={tdClass}>{client.Adresa}</td>
@@ -167,17 +163,22 @@ const ViewClients = ({ clients, setClients }) => {
             </table>
 
             <div className="flex items-center space-x-2">
-                <Button type="purple" onClick={sendAndExport} disabled={!filter || !filteredClients.length}>
-                    Send all
+                <Button
+                    variant="purple"
+                    onClick={sendAndExport}
+                    disabled={!filter || !filteredClients.length}
+                    loading={loading === "sendAndExport"}
+                >
+                    Trimite
                 </Button>
-                <Button type="green" onClick={() => exportExcel(DBClients, "CLIENTI.xlsx")}>
-                    Export all from DB
+                <Button variant="green" onClick={() => exportExcel(DBClients, "CLIENTI.xlsx")}>
+                    Exportă clienți bază
                 </Button>
                 <Button
-                    type="green"
+                    variant="green"
                     onClick={() => exportExcel(combineClients(excelClients, DBClients), "CLIENTI.xlsx")}
                 >
-                    Export all from Excel + DB
+                    Exportă clienți excel + bază
                 </Button>
             </div>
         </div>

@@ -21,6 +21,7 @@
     },
     "scripts": {
         "start": "concurrently \"react-scripts start\" \"cd backend && npm run start\"",
+        "production": "concurrently \"serve -s build\" \"cd backend && node index\"",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"

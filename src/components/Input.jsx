@@ -2,7 +2,7 @@ import React from "react";
 
 const Input = ({ label = "", value, onChange = () => null }) => {
     return (
-        <div className="relative">
+        <div className="relative w-full">
             {!!label.length && <label className="block mb-2 pl-2 text-sm font-medium text-gray-900">{label}</label>}
             <input
                 type="text"

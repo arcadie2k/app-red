@@ -1,36 +1,52 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useState, useContext, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
+import ExcelClients from "../contexts/ExcelClients";
+import { AlertsContext } from "../contexts/Alerts";
 import { jsPDF } from "jspdf";
 import Button from "./Button";
 import Input from "./Input";
+import Toggle from "./Toggle.jsx";
 import { combineClients, formatDate, getClients } from "../utils";
-import ExcelClients from "../contexts/ExcelClients";
 
-const SearchClient = ({ clients, setClients }) => {
-    const clientFields = {
-        Cont: "",
-        Consumator: "",
-        Adresa: "",
-        Email: "",
-        Fix1: "",
-        Fix2: "",
-        Mobil1: "",
-        Mobil2: "",
-        Telefon2: "",
-        fromDB: false,
-        sentAt: null,
-    };
+const SearchClient = () => {
+    const clientFields = useMemo(
+        () => ({
+            Cont: "",
+            Consumator: "",
+            Adresa: "",
+            Email: "",
+            Fix1: "",
+            Fix2: "",
+            Mobil1: "",
+            Mobil2: "",
+            sentAt: null,
+            fromDB: false,
+        }),
+        []
+    );
 
+    const { excelClients } = useContext(ExcelClients);
+    const { makeAlert } = useContext(AlertsContext);
     const [changeMade, setChangeMade] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedClientValues, setSelectedClientValues] = useState({ ...clientFields });
-    const { excelClients } = useContext(ExcelClients);
+    const [modifyName, setModifyName] = useState(false);
+    const [initialName, setInitialName] = useState("");
 
     /**
-     * Add client function [Optimized]
+     * Loading statuses
+     */
+    const [loading, setLoading] = useState(null);
+
+    /**
+     * Add client function [Done]
      */
     const addClient = useCallback(async () => {
+        if (loading) return;
+
         try {
+            setLoading("addClient");
+
             const res = await axios.post("/client", selectedClientValues);
 
             const newClientValues = {
@@ -41,16 +57,23 @@ const SearchClient = ({ clients, setClients }) => {
 
             setSelectedClientValues(newClientValues);
             setChangeMade(false);
+
+            makeAlert(`Clientul: ${selectedClientValues.Consumator} a fost adăugat în bază!`);
         } catch (err) {
             console.error(err);
+        } finally {
+            setLoading(null);
         }
-    }, [selectedClientValues]);
+    }, [selectedClientValues, loading]);
 
     /**
-     * Update client function [Optimized]
+     * Update client function [Done]
      */
     const updateClient = useCallback(async () => {
+        if (loading) return;
         try {
+            setLoading("updateClient");
+
             const res = await axios.put("/client", selectedClientValues);
 
             const newClientValues = {
@@ -59,22 +82,36 @@ const SearchClient = ({ clients, setClients }) => {
             };
 
             setSelectedClientValues(newClientValues);
+            setInitialName(newClientValues.Consumator);
             setChangeMade(false);
+            setModifyName(false);
+
+            makeAlert(`Clientul: ${selectedClientValues.Consumator} a fost modificat!`);
         } catch (err) {
             console.error(err);
+        } finally {
+            setLoading(null);
         }
-    }, [selectedClientValues]);
+    }, [selectedClientValues, loading]);
 
     /**
-     * Search by Cont [Optimized]
+     * Search by Cont [Done]
      */
     const checkClient = useCallback(async () => {
+        if (loading) return;
+
+        setSelectedClientValues(clientFields);
+        setInitialName("");
         setChangeMade(false);
+
         if (!search.length) return;
+
+        setLoading("checkClient");
 
         const DBClients = await getClients();
         const clients = combineClients(excelClients, DBClients);
         const clientIndex = clients.findIndex((client) => String(client.Cont) === search);
+
         if (clientIndex > -1) {
             const newClientValues = {};
 
@@ -83,16 +120,21 @@ const SearchClient = ({ clients, setClients }) => {
             }
 
             setSelectedClientValues(newClientValues);
-        } else {
-            setSelectedClientValues(clientFields);
+            setInitialName(newClientValues.Consumator);
         }
-    }, [search, excelClients, clientFields]);
+
+        setLoading(null);
+    }, [excelClients, clientFields, search, loading]);
 
     /**
-     * Unsend client function [Optimized]
+     * Unsend client function [Done]
      */
     const unsendClient = useCallback(async () => {
+        if (loading) return;
+
         try {
+            setLoading("unsendClient");
+
             await axios.put("/unsendClient", {
                 Cont: selectedClientValues.Cont,
             });
@@ -103,10 +145,13 @@ const SearchClient = ({ clients, setClients }) => {
             };
 
             setSelectedClientValues(newClientValues);
+            makeAlert(`Trimiterea clientului: ${selectedClientValues.Consumator} a fost anulată!`);
         } catch (err) {
             console.error(err);
+        } finally {
+            setLoading(null);
         }
-    }, [selectedClientValues]);
+    }, [selectedClientValues, loading]);
 
     /**
      * Generate PDF
@@ -211,105 +256,149 @@ const SearchClient = ({ clients, setClients }) => {
         doc.output("dataurlnewwindow", `${selectedClientValues.Consumator}.pdf`);
     }, [selectedClientValues]);
 
+    useEffect(() => {
+        if (modifyName === false && selectedClientValues.Consumator !== initialName) {
+            setSelectedClientValues({
+                ...selectedClientValues,
+                Consumator: initialName,
+            });
+
+            setChangeMade(true);
+        }
+    }, [modifyName, initialName, selectedClientValues]);
+
     return (
-        <div>
-            <div className="w-full pt-8 pb-10 rounded-md">
+        <section>
+            {/* Search by Cont */}
+            <div className="w-full pt-6 pb-8">
                 <div className="mx-auto max-w-md">
                     <form
-                        className="flex items-end space-x-2"
+                        className="flex items-end justify-center space-x-2"
                         onSubmit={(e) => {
                             e.preventDefault();
                             checkClient();
                         }}
                     >
                         <Input value={search} onChange={(e) => setSearch(e.target.value)} label="Cont Client" />
-                        <Button submit onClick={checkClient}>
-                            Cauta
+                        <Button type="submit" onClick={checkClient} loading={loading === "checkClient"}>
+                            Caută
                         </Button>
                     </form>
                 </div>
             </div>
 
+            {/* Client Information */}
             {selectedClientValues.Cont !== "" && (
-                <div
-                    className={`p-8 transition-colors border-t ${
-                        selectedClientValues.fromDB ? "bg-green-200" : "bg-slate-200"
-                    }`}
-                >
-                    <h1 className="text-3xl font-medium">
-                        Informatii despre client<span className="text-red-900">{changeMade ? "*" : ""}</span>
-                    </h1>
-                    <p className="mb-4 text-xs italic text-slate-500">
-                        Sursa: {selectedClientValues.fromDB ? "baza de date" : "excel"}
-                    </p>
+                <div>
+                    <div
+                        className={`p-8 transition-colors border-t border-b ${
+                            selectedClientValues.fromDB ? "bg-green-200" : "bg-slate-200"
+                        }`}
+                    >
+                        <h1 className="text-3xl font-medium">
+                            Informații despre client<span className="text-red-900">{changeMade ? "*" : ""}</span>
+                        </h1>
+                        <p className="mb-4 text-xs italic text-slate-500">
+                            Sursă: {selectedClientValues.fromDB ? "bază" : "excel"}
+                        </p>
 
-                    {/* Static fields */}
-                    <div className="w-full grid grid-cols-3 gap-4 mb-4">
-                        {["Cont", "Consumator", "Adresa"].map((clientKey) => (
-                            <Input key={clientKey} label={clientKey} value={selectedClientValues[clientKey]} />
-                        ))}
-                    </div>
+                        {/* Static fields */}
+                        <div className="w-full grid grid-cols-3 gap-4 mb-4">
+                            {["Cont", "Consumator", "Adresa"].map((clientKey) => (
+                                <Input
+                                    key={clientKey}
+                                    label={clientKey}
+                                    value={selectedClientValues[clientKey]}
+                                    onChange={
+                                        clientKey === "Consumator" && modifyName
+                                            ? (e) => {
+                                                  setChangeMade(true);
+                                                  setSelectedClientValues({
+                                                      ...selectedClientValues,
+                                                      [clientKey]: e.target.value,
+                                                  });
+                                              }
+                                            : null
+                                    }
+                                />
+                            ))}
+                        </div>
 
-                    {/* Dynamic fields */}
-                    <div className="w-full grid grid-cols-4 gap-4 mb-4">
-                        {["Fix1", "Mobil1", "Fix2", "Mobil2"].map((clientKey) => (
+                        {/* Dynamic fields */}
+                        <div className="w-full grid grid-cols-4 gap-4 mb-4">
+                            {["Fix1", "Mobil1", "Fix2", "Mobil2"].map((clientKey) => (
+                                <Input
+                                    key={clientKey}
+                                    label={clientKey}
+                                    value={selectedClientValues[clientKey]}
+                                    onChange={(e) => {
+                                        setChangeMade(true);
+                                        setSelectedClientValues({
+                                            ...selectedClientValues,
+                                            [clientKey]: e.target.value,
+                                        });
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="mb-8">
                             <Input
-                                key={clientKey}
-                                label={clientKey}
-                                value={selectedClientValues[clientKey]}
+                                label="Email"
+                                value={selectedClientValues["Email"]}
                                 onChange={(e) => {
                                     setChangeMade(true);
                                     setSelectedClientValues({
                                         ...selectedClientValues,
-                                        [clientKey]: e.target.value,
+                                        Email: e.target.value,
                                     });
                                 }}
                             />
-                        ))}
-                    </div>
-
-                    <div className="mb-8">
-                        <Input
-                            label="Email"
-                            value={selectedClientValues["Email"]}
-                            onChange={(e) => {
-                                setChangeMade(true);
-                                setSelectedClientValues({
-                                    ...selectedClientValues,
-                                    Email: e.target.value,
-                                });
-                            }}
-                        />
+                        </div>
                     </div>
 
                     {/* Buttons */}
-                    <div className="w-full flex items-center justify-between space-x-2">
-                        <div className="flex space-x-2">
+                    <div className="w-full flex items-center justify-between p-8 space-x-2">
+                        <div className="flex items-center space-x-2">
                             {selectedClientValues.fromDB ? (
-                                <Button type="green" onClick={updateClient} disabled={!changeMade}>
-                                    Save changes
+                                <Button
+                                    variant="green"
+                                    onClick={updateClient}
+                                    disabled={!changeMade}
+                                    loading={loading === "updateClient"}
+                                >
+                                    Salvează schimbări
                                 </Button>
                             ) : (
-                                <Button type="green" onClick={addClient}>
-                                    Create entry
+                                <Button variant="green" onClick={addClient} loading={loading === "addClient"}>
+                                    Adaugă în bază
                                 </Button>
                             )}
 
-                            <Button type="purple" onClick={generatePDF} disabled={changeMade}>
-                                Print
+                            <Button variant="purple" onClick={generatePDF} disabled={changeMade}>
+                                Printează
                             </Button>
+
+                            {/* Predohraniteli dlia imeni */}
+                            <div className="flex items-center pl-8">
+                                <Toggle
+                                    checked={modifyName}
+                                    setChecked={setModifyName}
+                                    label="Vreau să modific numele"
+                                />
+                            </div>
                         </div>
 
                         {/* Unsend button */}
                         {!!selectedClientValues.sentAt && (
-                            <Button type="red" onClick={unsendClient}>
-                                Amana trimitere
+                            <Button variant="red" onClick={unsendClient} loading={loading === "unsendClient"}>
+                                Anulează trimitere
                             </Button>
                         )}
                     </div>
                 </div>
             )}
-        </div>
+        </section>
     );
 };
 
