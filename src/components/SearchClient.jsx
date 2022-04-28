@@ -1,7 +1,7 @@
 import React, { useState, useContext, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 import ExcelClients from "../contexts/ExcelClients";
-import { AlertsContext } from "../contexts/Alerts";
 import { jsPDF } from "jspdf";
 import Button from "./Button";
 import Input from "./Input";
@@ -26,16 +26,11 @@ const SearchClient = () => {
     );
 
     const { excelClients } = useContext(ExcelClients);
-    const { makeAlert } = useContext(AlertsContext);
     const [changeMade, setChangeMade] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedClientValues, setSelectedClientValues] = useState({ ...clientFields });
     const [modifyName, setModifyName] = useState(false);
     const [initialName, setInitialName] = useState("");
-
-    /**
-     * Loading statuses
-     */
     const [loading, setLoading] = useState(null);
 
     /**
@@ -58,7 +53,7 @@ const SearchClient = () => {
             setSelectedClientValues(newClientValues);
             setChangeMade(false);
 
-            makeAlert(`Clientul: ${selectedClientValues.Consumator} a fost adăugat în bază!`);
+            toast.success(`Clientul a fost adăugat în bază!`);
         } catch (err) {
             console.error(err);
         } finally {
@@ -86,7 +81,7 @@ const SearchClient = () => {
             setChangeMade(false);
             setModifyName(false);
 
-            makeAlert(`Clientul: ${selectedClientValues.Consumator} a fost modificat!`);
+            toast.success(`Clientul a fost modificat!`);
         } catch (err) {
             console.error(err);
         } finally {
@@ -103,6 +98,7 @@ const SearchClient = () => {
         setSelectedClientValues(clientFields);
         setInitialName("");
         setChangeMade(false);
+        setModifyName(false);
 
         if (!search.length) return;
 
@@ -145,7 +141,7 @@ const SearchClient = () => {
             };
 
             setSelectedClientValues(newClientValues);
-            makeAlert(`Trimiterea clientului: ${selectedClientValues.Consumator} a fost anulată!`);
+            toast.success(`Trimiterea clientului a fost anulată!`);
         } catch (err) {
             console.error(err);
         } finally {

@@ -55,8 +55,11 @@ export const formatDate = (milis) => {
     const actualDate = new Date(Number(milis));
 
     let D = actualDate.getDate();
+    if (D < 10) D = "0" + D;
+
     let M = actualDate.getMonth() + 1;
     if (M < 10) M = "0" + M;
+
     let Y = actualDate.getFullYear();
 
     return `${D}.${M}.${Y}`;

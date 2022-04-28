@@ -1,8 +1,8 @@
-import axios from "axios";
 import React, { useState, useContext, useCallback, useEffect } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import ExcelClients from "../contexts/ExcelClients";
-import { AlertsContext } from "../contexts/Alerts";
 import Button from "./Button";
 import Datepicker from "./Datepicker";
 import Checkbox from "./Checkbox";
@@ -13,7 +13,6 @@ const ViewClients = () => {
     const tdClass = "text-sm text-gray-900 p-2 border-r";
 
     const { excelClients } = useContext(ExcelClients);
-    const { makeAlert } = useContext(AlertsContext);
     const [DBClients, setDBClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]);
     const [loading, setLoading] = useState(null);
@@ -47,9 +46,8 @@ const ViewClients = () => {
      */
     useEffect(() => {
         if (!DBClients.length) return;
-        const newClients = combineClients(excelClients, DBClients).filter((client) => {
-            if (!client.fromDB) return false;
 
+        const newClients = DBClients.filter((client) => {
             const clientUpdatedAt = new Date(Number(client.updatedAt));
             clientUpdatedAt.setHours(0, 0, 0, 0);
 
@@ -61,7 +59,7 @@ const ViewClients = () => {
         });
 
         setFilteredClients(newClients);
-    }, [DBClients, excelClients, startDate, endDate, filter]);
+    }, [DBClients, startDate, endDate, filter]);
 
     const exportExcel = useCallback((clients, filename = null) => {
         const workbook = XLSX.utils.book_new();
@@ -108,18 +106,18 @@ const ViewClients = () => {
         exportExcel(clientsToExport);
         setDBClients(newClients);
         setLoading(null);
-        makeAlert(`${clientsToExport.length} clienți au fost trimiși!`);
+        toast.success(`${clientsToExport.length} clienți au fost trimiși!`);
     }, [filteredClients, DBClients, exportExcel]);
 
     return (
         <div className="p-8">
             <div className="flex items-start justify-start mb-4 space-x-4">
                 <div className="w-full max-w-md">
-                    <label class="block mb-2 pl-2 text-sm font-medium text-gray-900">De la</label>
+                    <label className="block mb-2 pl-2 text-sm font-medium text-gray-900">De la</label>
                     <Datepicker value={startDate} setValue={setStartDate} />
                 </div>
                 <div className="w-full max-w-md">
-                    <label class="block mb-2 pl-2 text-sm font-medium text-gray-900">Pâna la</label>
+                    <label className="block mb-2 pl-2 text-sm font-medium text-gray-900">Pâna la</label>
                     <Datepicker value={endDate} setValue={setEndDate} />
                 </div>
             </div>
@@ -145,7 +143,7 @@ const ViewClients = () => {
                 </thead>
                 <tbody>
                     {filteredClients.map((client, clientIndex) => (
-                        <tr key={client.Cont} className="border-b">
+                        <tr key={client.Cont} className="border-b hover:bg-gray-100">
                             <td className={tdClass}>{clientIndex + 1}</td>
                             <td className={tdClass}>{client.Cont}</td>
                             <td className={tdClass}>{client.Consumator}</td>
