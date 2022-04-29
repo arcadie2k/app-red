@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import ExcelClients from "./contexts/ExcelClients";
 import Load from "./components/Load";
@@ -6,15 +6,15 @@ import SearchClient from "./components/SearchClient";
 import ViewClients from "./components/ViewClients";
 import axios from "axios";
 
-import * as XLSX from "xlsx";
+if (process.env.NODE_ENV === "production") {
+    axios.defaults.baseURL = `http://${process.env.REACT_APP_NETWORK_ADDRESS}:8080`;
+} else {
+    axios.defaults.baseURL = `http://localhost:8080`;
+}
 
 const App = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [excelClients, setExcelClients] = useState([]);
-
-    useEffect(() => {
-        axios.defaults.baseURL = `http://${process.env.REACT_APP_NETWORK_ADDRESS}:8080`;
-    }, []);
 
     return (
         <ExcelClients.Provider
